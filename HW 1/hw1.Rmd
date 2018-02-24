@@ -1,0 +1,158 @@
+---
+title: "CS 422 Section 02"
+output: html_notebook
+author: Khashkhuu Otgontulga
+--- 
+# Homework 1
+## Problem 1
+### Part 1-A
+```{r}
+# setwd(“/home/vkg/CS422/Homework-1”) 
+college <- read.csv("College.csv")
+```
+### Part 1-B 
+##### get a row.names column for the college dataset
+```{r}
+rownames(college) <- college[,1]
+fix(college)
+
+## make the first column private
+college <- college [ , -1]
+fix(college)
+```
+### Part 1-C
+#### Part 1-C-i
+```{r}
+summary(college)
+```
+#### Part 1-C-ii
+```{r}
+pairs(college[,1:10])
+```
+#### Part 1-C-iii
+```{r}
+boxplot(college$Outstate ~ college$Private, col = c("blue", "green"), main = "Outstate versus Private", xlab = "Private", ylab = "Outstate")
+```
+#### Part 1-C-iv
+```{r}
+Elite <- rep("No", nrow(college))
+Elite[college$Top10perc > 50] <- "Yes"
+Elite <- as.factor(Elite)
+college <- data.frame(college, Elite)
+summary(college$Elite)
+boxplot(college$Outstate ~ college$Elite, col = c("red", "yellow"), main = "Outstate versus Elite", xlab = "Elite", ylab = "Outstate")
+```
+#### Part 1-C-v
+```{r}
+par(mfrow=c(2,3))
+hist(college$Accept, breaks = 6, freq = TRUE, col = "blue", main = "Histogram", xlab = "Accept", ylab = "Value")
+hist(college$Accept, breaks = 10, freq = TRUE, col = "green", main = "Histogram", xlab = "Accept", ylab = "Value")
+hist(college$Enroll, breaks = 6, freq = TRUE, col = "blue", main = "Histogram", xlab = "Enroll", ylab = "Value")
+hist(college$Enroll, breaks = 10, freq = TRUE, col = "green", main = "Histogram", xlab = "Enroll", ylab = "Value")
+hist(college$Top10perc, breaks = 6, freq = TRUE, col = "blue", main = "Histogram", xlab = "Top10perc", ylab = "Value")
+hist(college$Top10perc, breaks = 10, freq = TRUE, col = "green", main = "Histogram", xlab = "Top10perc", ylab = "Value")
+```
+#### Part 1-C-vi
+```{r}
+summary(college$PhD)
+phd <- college[college$PhD == 103, ]
+nrow(phd)
+rownames[as.numeric(rownames(phd))]
+```
+## Problem 2
+#### Part 2-A 
+##### read the data
+```{r}
+nba <- read.csv("nba.csv")
+### general information
+head(nba)
+summary(nba)
+
+### find the predictor that is best for the response
+print(nba$FG)
+### build a linear model
+model.fg <- lm(PTS ~ FG, data=nba)
+summary(model.fg)
+```
+<!-- B1 is 2.55 so it is positive which means that FG is a useful predictor in predicting the response PTS. Also the F-statistic is 2936 so it definitely above 1 and the p-value is very small. -->
+
+#### Part 2-B
+```{r}
+par(mfrow=c(1,1))
+plot(nba$FG, nba$PTS, main = "Points Scored vs Field Goals Made", xlab="Field Goals Made", ylab = "Points Scored", col = "Blue")
+abline(model.fg)
+
+set.seed(1122)
+index <- sample(1:nrow(nba), 250)
+train <- nba[index, ]
+test <- nba[-index, ]
+```
+#### Part 2-C 
+```{r}
+model.FTA <- lm(PTS ~ FTA, data=nba)
+summary(model.FTA)
+model.A <- lm(PTS ~ A, data=nba)
+summary(model.A)
+
+par(mfrow=c(1,3))
+plot(nba$FG, nba$PTS, main = "Points Scored vs Field Goals Made", xlab="Field Goals Made", ylab = "Points Scored", col = "Blue")
+plot(nba$FTA, nba$PTS, main = "Points Scored vs Free Throws", xlab="Free Throws", ylab = "Points Scored", col = "Green")
+plot(nba$A, nba$PTS, main = "Points Scored vs Assists", xlab="Assists", ylab = "Points Scored", col = "Red")
+```
+#### Part 2-D
+##### fit the model on the training data
+```{r}
+model <- lm(PTS ~ FG + FTA + A, data=train)
+summary(model)
+```
+<!-- The field goals attribute is the best predictor because it has the highest estimate value of 2.23 vs 0.72 and 0.05. Well this is because points is added up by field goals, three points made, and free throws made. Free throw attempts and assists do not add up to the points so they do not predict the response well. 
+    The adjusted R^2 value is 97.22% which means that our model captures a lot of the variance.
+    The p-values of FG and FTA is low which mean they are good predictors to the response. FG and FTA also have 3 asterisks while A does not. 
+    The F statistic is not just above 1 but it is very high with our n as 250 which is a good thing. Thus, FG and FTA are statistically significant and A is not.
+      On a side note, I tried model <- lm(PTS ~ FG + X3P + FT, data=train) which is a essentially perfect fit and I got a warning that it was. This confused me but I realized that points is made up of these three predictors so I have chosen FG, which I already know will be a good predictor, FTA which can somewhat tell me how many points they got, and assists which I know will not be a good predictor. I thought these 3 predictor I chose was a good mix.-->
+#### Part 2-E
+```{r}
+par(mfrow=c(1,1))
+plot(model$fitted.values, model$residuals, 
+    xlab = "Fitted values\nlm(sales ~.)",
+    ylab = "Residuals",
+    main = "Residuals vs Fitted",
+    col = "Red")
+abline(0,0)
+```
+<!-- There seems to be no clear sign of a pattern in the residual plot so this means that the model is a good fit. -->
+#### Part 2-F
+```{r}
+hist(model$fitted.values, model$residuals,
+    breaks = 6, 
+    freq = TRUE,
+    col = "blue", 
+    xlab = "Fitted values", 
+    ylab = "Residuals",
+    main = "Residuals vs Fitted")
+```
+<!-- The histogram does not exactly follow a Gaussian distribution becauase the right hand side does but the left hand side is missing so it is not symmetrical. -->
+#### Part 2-G
+##### round the predicted values because no one scores 14.4 points. Points are integers
+```{r}
+predicted <- round(predict(model, test))
+actual <- c(test$PTS)
+```
+##### now we can compare the actual points and the predicted points
+```{r}
+df <- data.frame(predicted, actual)
+sum(df$predicted == df$actual)
+```
+<!-- 8 values matched. That means that 11 values did not match. This is a 42.11% (8/19) success rate of predicting the right values with my model. -->
+#### Part 2-H
+```{r}
+summary(model)
+```
+<!--
+ r <- c(resid(model))
+ TSS <- sum((r - mean(r)^2)
+ RSS <- sum((r - mean(r)^2)
+     1. RSS = sum((r - mean(r)^2)
+     2. TSS = sum((r - predict(r)^2)
+     3. F-statistic = 2900
+     4. RSE = 1.314 -->
