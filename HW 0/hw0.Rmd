@@ -1,0 +1,24 @@
+---
+title: "CS 422 Section 01"
+output: html_notebook
+author: Khashkhuu Otgontulga
+--- 
+'''
+I expect to learn the foundations of data mining, how to code in R, and some knowledge about machine learning. I want to have enough knowledge so that when I take a machine learning course, then I will be prepared. I eventually want to learn about deep learning but I think this class is a prerequisite for all of this to happen.
+'''
+```{r}
+data(cars)
+str(cars)
+plot(cars, main = "The Cars Dataset")
+summary(cars)
+```
+'''
+max speed: 25
+min distance: 2 
+'''
+```{r}
+df <- read.csv("student.csv", sep=";", header=T)
+newrow <- data.frame(name = "Brad Pitt", id = 40051, gpa = 2.21, grade = 'C')
+rbind(df, newrow)
+str(df)
+```
